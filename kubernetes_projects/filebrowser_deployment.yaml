@@ -1,0 +1,117 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    kubernetes.io/metadata.name: filebrowser
+  name: filebrowser
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebrowser-deployment
+  namespace: filebrowser
+spec:
+  #replicas: 1
+  selector:
+    matchLabels:
+      app: filebrowser
+  template:
+    metadata:
+      labels:
+        app: filebrowser
+    spec:
+      containers:
+      - name: filebrowser
+        image: filebrowser/filebrowser
+        #securityContext:
+        #  runAsUser: 1000
+        #  runAsGroup: 1000
+        ports:
+          - containerPort: 80
+        volumeMounts:
+          - name: filebrowser-storage
+            mountPath: /srv
+          - name: filebrowser-database
+            mountPath: /database.db           
+      volumes:
+        - name: filebrowser-storage
+          persistentVolumeClaim:
+            claimName: filebrowser-storage-pv-claim
+        - name: filebrowser-database
+          persistentVolumeClaim:
+            claimName: filebrowser-database-pv-claim
+#---
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: filebrowser-service
+#  labels:
+#    run: filebrowser
+#spec:
+#  type: NodePort
+#  selector:
+#    run: filebrowser
+#  ports:
+#      # By default and for convenience, the `targetPort` is set to the same value as the `port` field.
+#    - port: 80
+#      targetPort: 80
+#      # Optional field
+#      # By default and for convenience, the Kubernetes control plane will allocate a port from a range (default: 30000-32767)
+#      #nodePort: 32000
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: filebrowser-storage-pv-claim
+  namespace: filebrowser
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 15Gi
+  storageClassName: "" # set empty in order to choose pv by name.
+  volumeName: filebrowser-storage-pv
+  
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: filebrowser-database-pv-claim
+  namespace: filebrowser
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: "" # set empty in order to choose pv by name.
+  volumeName: filebrowser-database-pv
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: filebrowser-storage-pv
+spec:
+  capacity:
+    storage: 15Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/home/docs/files"
+  
+---  
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: filebrowser-database-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/home/docs/database.db"
