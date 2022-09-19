@@ -23,6 +23,7 @@ spec:
     spec:
       containers:
       - name: filebrowser
+        imagePullPolicy: IfNotPresent 
         image: filebrowser/filebrowser
         #securityContext:
         #  runAsUser: 1000
