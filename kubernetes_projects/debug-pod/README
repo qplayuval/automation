@@ -1,5 +1,7 @@
 # deploy pod to kubernetes:
+
 kubectl apply -f debug-pod.yaml
+
 # shell into the ubuntu container via CRI(=containerd):
 
 crictl exec --tty=true --interactive=true <CONTAINER-ID>/bin/bash
