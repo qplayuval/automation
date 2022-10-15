@@ -1,0 +1,3 @@
+# shell into the ubuntu container via CRI(=containerd):
+
+crictl exec --tty=true --interactive=true <CONTAINER-ID>/bin/bash
