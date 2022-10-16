@@ -6,12 +6,12 @@ namespace: registry
 generatorOptions:
   disableNameSuffixHash: true
 
-secretGenerator:
-  - name: registry-secret-tls
-    type: kubernetes.io/tls
-    files:
-      - tls.crt
-      - tls.key
+#secretGenerator:
+#  - name: registry-secret-tls
+#    type: kubernetes.io/tls
+#    files:
+#      - tls.crt
+#      - tls.key
 
 resources:
   - namespace.yaml

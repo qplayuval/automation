@@ -4,10 +4,10 @@ kind: Ingress
 metadata:
   name: registry-ingress
 spec:
-  tls:
-    - hosts:
-        - registry.example.com
-      secretName: registry-secret-tls
+#  tls:
+#    - hosts:
+#        - registry.example.com
+#      secretName: registry-secret-tls
   rules:
     - host: registry.example.com
       http:

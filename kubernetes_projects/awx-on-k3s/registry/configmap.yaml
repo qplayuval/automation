@@ -32,4 +32,4 @@ data:
         interval: 10s
         threshold: 3
   htpasswd: |-
-    reguser:$2y$05$VLMvcWCPF0VUuHi0BXBz7eoXGZ6KRl1gataiqTXz4DdSVIXGloKiq
+    reguser:$2y$05$0tVMZrlSiEYOLzeSF9QvKeqMh3C/ImU2okMecrumsvXKvALJpfpYS

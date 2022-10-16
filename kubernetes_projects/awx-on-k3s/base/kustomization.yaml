@@ -6,12 +6,12 @@ namespace: awx
 generatorOptions:
   disableNameSuffixHash: true
 
-secretGenerator:
- # - name: awx-secret-tls
- #   type: kubernetes.io/tls
- #   files:
- #     - tls.crt
- #     - tls.key
+#secretGenerator:
+#  - name: awx-secret-tls
+#    type: kubernetes.io/tls
+#    files:
+#      - tls.crt
+#      - tls.key
 
   - name: awx-postgres-configuration
     type: Opaque
@@ -35,13 +35,6 @@ secretGenerator:
   #  type: Opaque
   #  literals:
   #    - secret_key=MySuperSecureSecretKey123!
-
-  # Temporary workaround to suppress errors from AWX Operator 0.21.0.
-  # Refer: https://github.com/kurokobo/awx-on-k3s/issues/74
-  - name: redhat-operators-pull-secret
-    files:
-      - .dockerconfigjson=dockerconfig.json
-    type: kubernetes.io/dockerconfigjson
 
 resources:
   - pv.yaml

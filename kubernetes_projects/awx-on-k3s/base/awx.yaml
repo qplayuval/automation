@@ -5,18 +5,17 @@ metadata:
   name: awx
 spec:
   # These parameters are designed for use with:
-  # - AWX Operator: 0.28.0
-  #   https://github.com/ansible/awx-operator/blob/0.28.0/README.md
-  # - AWX: 21.5.0
-  #   https://github.com/ansible/awx/blob/21.5.0/INSTALL.md
+  # - AWX Operator: 0.30.0
+  #   https://github.com/ansible/awx-operator/blob/0.30.0/README.md
+  # - AWX: 21.7.0
+  #   https://github.com/ansible/awx/blob/21.7.0/INSTALL.md
 
   admin_user: admin
   admin_password_secret: awx-admin-password
 
-  #ingress_type: ingress
+  ingress_type: ingress
   #ingress_tls_secret: awx-secret-tls
   #hostname: awx.example.com
-  service_type: nodeport
 
   postgres_configuration_secret: awx-postgres-configuration
 
