@@ -1,0 +1,10 @@
+---
+
+- name: create real output path for config files
+  set_fact:
+    output_config_path: "{{ output_path | default('output') }}/{{ domain_id }}-{{ ring_id }}"
+
+- name: create output directory
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/{{ output_config_path }}"
+    state: directory

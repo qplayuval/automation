@@ -1,0 +1,10 @@
+---
+# tasks file for prepare_configs
+
+- name: import vars from playbook path
+  include_vars:
+    dir: "{{ playbook_dir }}/vars/{{ role_name }}"
+    ignore_unknown_extensions: True
+    extensions:
+      - 'yaml'
+      - 'yml'

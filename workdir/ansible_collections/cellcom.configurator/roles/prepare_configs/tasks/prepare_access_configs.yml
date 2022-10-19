@@ -1,0 +1,10 @@
+---
+
+- name: load configurations to ncs 540 device
+  import_tasks: 540_access_config.yml
+  when: "'540' in item['hostname']"
+
+- name: check access type
+  ansible.builtin.fail:
+    msg: "Device hostname not recognized under access section: {{ item['hostname'] }}"
+  when: "'540' not in item['hostname']"

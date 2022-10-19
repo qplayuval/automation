@@ -1,0 +1,15 @@
+---
+
+- name: load configurations to 57B1 device
+  import_tasks: 57b1_aggregate_config.yml
+  when:
+    - "'57B1' in item['east_agg_hostname']"
+    - "'57B1' in item['west_agg_hostname']"
+
+- name: check aggregate type
+  ansible.builtin.fail:
+    msg: "Device hostname not recognized under access section: \
+          {{ item['west_agg_hostname'] }}, {{ item['east_agg_hostname'] }}"
+  when:
+    - "'57B1' not in item['east_agg_hostname']"
+    - "'57B1' not in item['west_agg_hostname']"

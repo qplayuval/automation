@@ -1,0 +1,18 @@
+---
+
+- name: Merge the provided configuration with the existing running configuration
+  cisco.iosxr.iosxr_acls:
+    config:
+    - afi: ipv4
+      acls:
+      - name: ssm
+        aces:
+          - grant: permit
+            protocol: tcp
+            source:
+              host: 2.2.2.2
+            destination:
+              any: yes
+              port_protocol:
+                eq: 8080
+    state: "{{ acl.state }}"

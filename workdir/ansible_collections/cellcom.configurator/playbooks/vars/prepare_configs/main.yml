@@ -1,0 +1,12 @@
+---
+
+hostname: "CE-540-22724_1-5006-02-IRIAT_MODIIN"
+ip_loopback0: "172.22.70.193"
+ip_loopback100: "172.22.128.193"
+description_to_port_29: "to-CE-540-07527_1-5006-02-AZRIELI_MODIIN-Hu0/0/0/28"
+ip_port_29: "172.22.145.197"
+description_to_port_28: "to-CE-540-07627_1-5006-02-KFAR_RUT-Hu0/0/0/29"
+ip_port_28: "172.22.145.194"
+ring_id: 5006
+prefix_sid: 17729
+#output_path: output #(=default path to output config files)

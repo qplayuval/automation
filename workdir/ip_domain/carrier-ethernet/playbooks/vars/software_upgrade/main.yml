@@ -1,0 +1,10 @@
+---
+
+software_upgrade:
+  version: "7.2.2"
+  mgmt_vrf: "oob-mng"
+  images_path: "/home/images/ios_xr_images"
+  images_server_ip: "172.27.40.35"
+  images_server_user: "images"
+  images_server_pass: "12cellcom"
+  timeout: 1800

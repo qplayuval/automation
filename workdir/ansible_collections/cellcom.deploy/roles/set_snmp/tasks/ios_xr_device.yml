@@ -1,0 +1,12 @@
+---
+
+- name: Merge snmp-server community configuration
+  cisco.iosxr.iosxr_snmp_server:
+    config:
+      communities:
+        - name: "{{ snmp['communities_name'] }}"
+          ro: "{{ snmp['communities_ro'] }}"
+          rw: "{{ snmp['communities_rw'] }}"
+          systemowner: "{{ snmp['communities_systemowner'] }}"
+          acl_v4: "{{ snmp['communities_acl_v4'] }}"
+    state: "{{ snmp['state'] }}"

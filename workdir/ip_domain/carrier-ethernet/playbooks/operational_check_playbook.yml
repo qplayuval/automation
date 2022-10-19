@@ -1,0 +1,23 @@
+---
+
+- hosts: lab_net
+  gather_facts: yes
+  ignore_unreachable: yes
+  ignore_errors: yes
+  debugger: on_failed
+
+  vars_prompt:
+
+    - name: ansible_user
+      prompt: Whats is your username ?
+      private: no
+
+    - name: ansible_ssh_pass
+      prompt: Enter password
+      private: yes
+
+  tasks:
+
+    - name: get participated isis interfaces
+      import_role:
+        name: cellcom.operational_check.isis_configured_ifaces

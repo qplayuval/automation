@@ -1,0 +1,1 @@
+podman build --no-cache -t registry.customee.com/custom-ee/awx-ee-base .

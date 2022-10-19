@@ -1,0 +1,59 @@
+---
+
+- name: block of init tasks
+  block:
+    - name: set subfolder name
+      set_fact:
+        sub_folder: "ncs540l"
+    
+    - name: print type of device
+      ansible.builtin.debug:
+        msg: "this is ncs540l !!!"
+    
+    - name: print images path
+      ansible.builtin.debug:
+        msg: "{{ software_upgrade['images_path'] }}"
+    
+    - name: disable FPD (Field Programmable Device) auto upgrade
+      cisco.iosxr.iosxr_config:
+        lines: "no fpd auto-upgrade"
+  tags: [always]
+
+- name: import auto pull images script to device
+  import_tasks: auto_inject_images.yml
+  tags: [image, smu]
+
+- name: import installation process
+  import_tasks: ios_xr_install_images.yml
+  tags: image
+
+- name: set packages for ncs540l installation
+  set_fact:
+    packages_to_install: "xr-bigbend-syspro xr-cdp xr-cpa-common xr-cpa-driver-devobj-phy xr-cpa-driver-fpgalib-infra xr-eigrp xr-is-is xr-k9sec xr-ncs540l-core xr-ncs540l-cpa xr-ncs540l-cpa-bcm xr-ncs540l-os xr-spi-core"
+  tags: smu
+
+- name: import SMU process
+  import_tasks: ios_xr_install_smu.yml
+  tags: smu
+
+- name: import BIOS process
+  import_tasks: ios_xr_install_bios.yml
+  tags: bios
+
+- name: block of finish tasks
+  block:
+    - name: get status of install committed
+      cisco.iosxr.iosxr_command:
+        commands: sh install committed | utility egrep {{ software_upgrade['version'] }}
+      register: install_result
+    
+    - name: check status of install commited packages
+      ansible.builtin.fail:
+        msg: something going wrong with the bios update {{ install_result }}...
+      when: install_result.stdout | regex_search("![a-zA-Z0-9]+")
+    
+    - name: install commited packages successfully updated
+      ansible.builtin.debug:
+        msg: all the installation process successfully finished !
+      when: install_result.stdout | regex_search("[a-zA-Z0-9]+")
+  tags: [always]

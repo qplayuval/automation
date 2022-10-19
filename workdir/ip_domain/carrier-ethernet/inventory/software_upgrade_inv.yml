@@ -1,0 +1,13 @@
+---
+
+lab:
+  hosts: "192.168.184.74"
+
+software_upgrade_net:
+  children:
+    lab:
+  vars:
+    ansible_network_os: "cisco.iosxr.iosxr"
+    ansible_connection: "ansible.netcommon.network_cli"
+    ansible_user: "cellcom"
+    ansible_password: "cellcom"

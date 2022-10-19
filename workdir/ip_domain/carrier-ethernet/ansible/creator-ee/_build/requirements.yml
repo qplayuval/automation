@@ -1,0 +1,10 @@
+---
+collections:
+  - git+http://corpgit/ansible-collections/ansible.utils
+  - git+http://corpgit/ansible-collections/ansible.netcommon
+  - git+http://corpgit/ansible-collections/community.network
+  - git+http://corpgit/ansible-collections/cisco.iosxr
+  - git+http://corpgit/ansible-collections/cellcom.configurator
+  - git+http://corpgit/ansible-collections/cellcom.deploy
+  - git+http://corpgit/ansible-collections/cellcom.operational_check
+  - git+http://corpgit/ansible-collections/cellcom.tools

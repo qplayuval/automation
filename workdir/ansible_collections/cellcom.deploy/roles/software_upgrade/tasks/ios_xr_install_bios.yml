@@ -1,0 +1,56 @@
+---
+
+- name: get status of bios
+  cisco.iosxr.iosxr_command:
+    commands: show hw-module fpd | utility egrep -i primary-bios
+  register: result
+
+- name: get status of bios version
+  block:
+    - name: update bios version
+      cisco.iosxr.iosxr_command:
+        commands: upgrade hw-module location 0/RP0/CPU0 fpd Primary-BIOS
+
+    - name: preparing bios update...
+      cisco.iosxr.iosxr_command:
+        commands: show hw-module fpd | utility egrep -i primary-bios
+        interval: 5
+        retries: 300
+        match: "all"
+        wait_for: result[0] contains "RLOAD REQ"
+
+    - name: reload the router
+      cisco.iosxr.iosxr_command:
+        commands:
+        - { command: reboot, prompt: "[confirm]", answer: y}
+
+    - name: bios updating...
+      ansible.builtin.pause:
+        minutes: 1
+
+    - name: Waits for connection to come back - IP {{ inventory_hostname }} 
+      ansible.builtin.wait_for_connection:
+        timeout: "{{ software_upgrade['timeout'] }}"
+
+    - name: get status of bios
+      cisco.iosxr.iosxr_command:
+        commands: show hw-module fpd | utility egrep -i primary-bios
+      register: result_last_phase
+
+    - name: check bios update status
+      ansible.builtin.fail:
+        msg: something going wrong with the bios update {{ result_last_phase }}...
+      when: "'current' not in result_abc|lower"
+
+  when: "'current' not in result|lower" 
+
+- name: BIOS updated successfully
+  block:
+    - name: BIOS upgraded successfully
+      ansible.builtin.debug:
+        msg: software upgraded successfully 
+    
+    - name: BIOS upgraded successfully 
+      ansible.builtin.debug:
+        msg: =====================================================================================
+  when: "'current' in result|lower"

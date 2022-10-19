@@ -1,0 +1,36 @@
+---
+
+- name: set domain_ring_id hostname
+  set_fact:
+    domain_ring_hostname: "{{ item['east_agg_description_to_acc'] }}"
+
+- name: derive domain_ring_id from hostname
+  import_tasks: set_domain_ring_id.yml
+
+- name: block of tasks that relate to isis west-east-domain
+  block:
+    - name: configure isis west-east-domain
+      cellcom.configurator.isis_west_east_domain:
+        east_loopback: "{{ item['east_agg_loopback0'] }}"
+        west_loopback: "{{ item['west_agg_loopback0'] }}"
+        domain: "{{ domain_id }}"
+      register: isis_west_east_domain_result
+    
+    - name: set isis_west_east_domain
+      set_fact:
+        isis_west_east_domain: "{{ isis_west_east_domain_result['result'] }}"
+
+- name: define output path
+  import_tasks: define_output_path.yml
+
+- name: block of tasks that relate to export template to output path
+  block:
+    - name: export west template config file to "{{ playbook_dir }}/{{ output_config_path }}"
+      ansible.builtin.template:
+        src: "files/57B1_west_config_template.j2"
+        dest: "{{ playbook_dir }}/{{ output_config_path }}/{{ item['east_agg_hostname'] }}-{{ isis_west_east_domain }}-{{ ring_id }}.txt"
+
+    - name: export east template config file to "{{ playbook_dir }}/{{ output_config_path }}"
+      ansible.builtin.template:
+        src: "files/57B1_east_config_template.j2"
+        dest: "{{ playbook_dir }}/{{ output_config_path }}/{{ item['west_agg_hostname'] }}-{{ isis_west_east_domain }}-{{ ring_id }}.txt"

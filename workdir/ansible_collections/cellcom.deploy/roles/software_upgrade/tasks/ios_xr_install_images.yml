@@ -1,0 +1,43 @@
+---
+
+- name: block of tasks to discover iso path
+  block:
+    - name: get .iso path for the image
+      cisco.iosxr.iosxr_command:
+        commands: bash -c  find /var/xr/disk1/{{ software_upgrade['version'] }} -type f -name *.iso
+      register: iso_path_result
+    
+    - name: set image path
+      set_fact:
+        image_path: "{{ iso_path_result['stdout'][-1] }}"
+
+- name: invoke image installation
+  cisco.iosxr.iosxr_command:
+    commands: install package replace {{ image_path }}
+
+- name: import auto install packages
+  import_tasks: ios_xr_install_packages.yml
+
+- name: block of tasks that invoke and check configuration failed
+  block:
+    - name: show configuration failed
+      cisco.iosxr.iosxr_command:
+        commands: show configuration failed
+      register: configuration_result
+
+    - name: print configuration failed command output
+      ansible.builtin.debug:
+        msg: "{{ configuration_result['stdout'] }}"
+
+    - name: check configuration failed 
+      ansible.builtin.fail:
+        msg: something going wrong with the configuration..
+      when: configuration_result.stdout | regex_search("![a-zA-Z0-9]+")
+
+- name: software upgraded successfully 
+  ansible.builtin.debug:
+    msg: software upgraded successfully 
+
+- name: software upgraded successfully 
+  ansible.builtin.debug:
+    msg: =====================================================================================

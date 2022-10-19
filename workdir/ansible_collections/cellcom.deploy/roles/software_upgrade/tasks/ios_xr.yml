@@ -1,0 +1,25 @@
+---
+
+- name: collect facts about device
+  block:
+    - name: get model of device
+      cisco.iosxr.iosxr_command:
+        commands: show version
+      register: platform_print
+    
+    - name: print output
+      ansible.builtin.debug:
+        msg: "{{ platform_print['stdout'] }}"
+
+    - name: set version pattern
+      set_fact:
+        version_pattern: "version      : {{ software_upgrade['version'] }}"
+  tags: [always]
+
+- name: block of tasks that relate to upgrade software version
+  block:
+    - name: import ios_xr_ncs540l
+      import_tasks: ios_xr_ncs540l.yml
+      when: "'ncs540l' in platform_print|lower"
+
+  when: ( version_pattern not in  platform_print|lower ) or ( "ansible_run_tags == 'smu'" ) or ( "ansible_run_tags == 'bios'" )

@@ -1,0 +1,21 @@
+---
+
+- name: set metric to port 28 if connects to 57b1
+  set_fact:
+    metric_port_28: 1000
+  when: "'57b1' in item['description_to_port_28']|lower"
+
+- name: set metric to port 29 if connects to 57b1
+  set_fact:
+    metric_port_29: 1000
+  when: "'57b1' in item['description_to_port_29']|lower"
+
+- name: set metric to port 28 if connects to acc
+  set_fact:
+    metric_port_28: 200
+  when: "'540' in item['description_to_port_28']|lower"
+
+- name: set metric to port 29 if connects to acc
+  set_fact:
+    metric_port_29: 200
+  when: "'540' in item['description_to_port_29']|lower"

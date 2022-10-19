@@ -1,0 +1,17 @@
+---
+
+#snmp:
+#  communities_name: "SNMP-SERVER"
+#  communities_ro: true
+#  communities_rw: false
+#  communities_systemowner: true
+#  communities_acl_v4: "SNMP-ALL"
+#  state: "replaced" #replaced/merged/gathered/rendered/parsed
+
+snmp:
+  communities_name: "Cellsn"
+  communities_ro: false
+  communities_rw: false
+  communities_systemowner: false
+  communities_acl_v4: ""
+  state: "merged" #replaced/merged/gathered/rendered/parsed

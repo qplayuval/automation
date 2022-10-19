@@ -1,0 +1,10 @@
+stages:
+  - build
+  
+build_src:
+  stage: build
+  image:
+    name: http://registry.customee.com/custom-ee/prod-ce
+    entrypoint: [""]  
+  script:
+    - ls -la

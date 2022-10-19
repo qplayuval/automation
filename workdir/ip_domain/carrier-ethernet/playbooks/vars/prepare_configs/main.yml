@@ -1,0 +1,38 @@
+---
+
+access:
+
+  - hostname: "CE-540-22724_1-5006-02-IRIAT_MODIIN"
+    ip_loopback0: "172.22.70.193"
+    ip_loopback100: "172.22.128.193"
+    description_to_port_28: "to-CE-540-07627_1-5006-02-KFAR_RUT-Hu0/0/0/29"
+    ip_port_28: "172.22.145.194"
+    description_to_port_29: "to-CE-540-07527_1-5006-02-AZRIELI_MODIIN-Hu0/0/0/28"
+    ip_port_29: "172.22.145.197"
+    prefix_sid: 17729
+
+
+  - hostname: "CE-540-00232_1-5006-02-IRIAT_MODIIN"
+    ip_loopback0: "172.22.70.194"
+    ip_loopback100: "172.22.128.194"
+    description_to_port_28: "to-CE-540-07627_1-5006-02-KFAR_RUT-Hu0/0/0/29"
+    ip_port_28: "172.22.145.12"
+    description_to_port_29: "to-CE-540-07527_1-5006-02-AZRIELI_MODIIN-Hu0/0/0/28"
+    ip_port_29: "172.22.145.1"
+    prefix_sid: 17730
+
+
+aggregate:
+
+  - east_agg_hostname: "CE-57B1-08186-MED1_HACARMEL"
+    east_agg_port_to_acc: "Hu0/0/0/1"
+    east_agg_ip_to_acc: "172.22.151.117"
+    east_agg_description_to_acc: "to-CE-540-08186-5016-01-MED1_HACARMEL-Hu0/0/0/28"
+    east_agg_loopback0: "12.3.5.14"
+    west_agg_hostname: "CE-57B1-50985-0019-BEIT_KFIR"
+    west_agg_port_to_acc: "Hu0/0/0/2"
+    west_agg_ip_to_acc: "172.22.151.126"
+    west_agg_description_to_acc: "to-CE-540-03216-5016-01-RESITAL-Hu0/0/0/29"
+    west_agg_loopback0: "12.3.2.48"
+
+output_path: output #(=default path to output config files)

@@ -1,0 +1,11 @@
+---
+
+- name: get domain_ring_id from hostname
+  cellcom.configurator.domain_ring_id:
+    domain_ring_hostname: "{{ domain_ring_hostname }}"
+  register: domain_ring_id_result
+
+- name: set domain and ring_id parameters
+  set_fact:
+    domain_id: "{{ domain_ring_id_result['domain_id'] }}"
+    ring_id: "{{ domain_ring_id_result['ring_id'] }}"

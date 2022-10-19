@@ -1,0 +1,23 @@
+---
+
+- name: make remote version directory
+  cisco.iosxr.iosxr_command:
+    commands: "run mkdir -p   /misc/disk1/{{ software_upgrade['version'] }}"
+
+- name: inject auto pull images script to device
+  cisco.iosxr.iosxr_command:
+    commands: run echo -e '#!/usr/bin/expect\\nset timeout {{ software_upgrade["timeout"] }}\\nspawn rsync -avP {{ software_upgrade["images_server_user"] }}@{{ software_upgrade["images_server_ip"] }}:{{ software_upgrade["images_path"] }}/{{ sub_folder }}/{{ software_upgrade["version"] }}/* /var/xr/disk1/{{ software_upgrade["version"] }}  --log-file=/var/xr/disk1/{{ software_upgrade["version"] }}/statusp\\nexpect {\\n"Are you sure you want to continue connecting (yes/no)" {\\nsend "yes\\\\r"\\nexp_continue\\n}\\n"password:" {\\nsend "12cellcom\\\\r"\\n}\\n}\\nexpect eof\\nexit' > /tmp/auto_pull_images.exp
+
+- name: invoke auto pull images script
+  cisco.iosxr.iosxr_command:
+    commands: bash vrf {{ software_upgrade['mgmt_vrf'] }} -c expect /tmp/auto_pull_images.exp &
+
+- name: pulling image and files...
+  cisco.iosxr.iosxr_command:
+    commands:  bash -c cat  /var/xr/disk1/{{ software_upgrade['version'] }}/statusp
+    interval: 20
+    retries: 90
+    match: "all"
+    wait_for:
+      - result[0] not contains "error"
+      - result[0] contains "total size"

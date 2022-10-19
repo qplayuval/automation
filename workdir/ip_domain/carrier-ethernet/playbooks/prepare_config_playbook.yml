@@ -1,0 +1,22 @@
+---
+
+- hosts: localhost
+  gather_facts: no
+  debugger: on_failed
+
+  tasks:
+
+    - name: import prepare_configs role
+      import_role:
+        name: cellcom.configurator.prepare_configs
+
+    - name: push all output files to server via HTTP-API
+      cellcom.tools.filebrowser_api:
+        api_username: "{{ api_username }}"
+        api_password: "{{ api_password }}"
+        local_path_output: "{{ playbook_dir }}/{{ output_path }}"
+        suffix_pattern: "txt"
+        api_path: "http://172.27.40.36:30031/api"
+        api_reference_path: "ipce"
+        state: "post"
+      no_log: True

@@ -1,0 +1,926 @@
+hostname {{ item['hostname'] }}
+clock timezone IST Israel
+!
+
+logging ipv4 dscp cs6
+logging trap notifications
+logging events display-location
+logging events level informational
+logging console disable
+logging monitor debugging
+logging buffered 99000000
+logging buffered debugging
+logging 172.27.2.21 vrf mng-net severity info
+logging 172.27.2.22 vrf mng-net severity info
+logging 172.27.2.25 vrf mng-net severity info
+logging 172.27.2.63 vrf mng-net severity info
+logging 172.22.126.1 vrf mng-net severity info
+logging 172.27.2.244 vrf mng-net severity info
+logging 172.22.126.17 vrf mng-net severity info
+logging hostnameprefix {{ item['hostname'] }}
+logging suppress duplicates
+logging source-interface loopback 100 vrf mng-net
+service timestamps log datetime localtime msec show-timezone year
+service timestamps debug datetime localtime msec show-timezone year
+logging events link-status software-interfaces
+domain ipv4 host nms.corp.cellcom.co.il 172.27.2.106
+domain name comm.cellcom.co.il
+domain lookup disable
+!
+tacacs source-interface Loopback100 vrf mng-net
+tacacs-server timeout 3
+!
+
+aaa accounting exec default start-stop group Cellcom-ACS
+aaa accounting commands default start-stop group Cellcom-ACS
+aaa group server tacacs+ Cellcom-ACS
+ vrf mng-net
+ server-private 10.10.16.55 port 49
+  key 7 075E301E595A1C5105471F
+ !
+ server-private 10.10.16.57 port 49
+  key 7 055A175D361F4B5D0B5003
+ !
+!
+aaa authorization exec default group Cellcom-ACS local
+aaa authorization commands default group Cellcom-ACS none
+aaa authorization eventmanager default local
+aaa authentication login aux group Cellcom-ACS local
+aaa authentication login default group Cellcom-ACS local
+!
+cdp
+!
+grpc
+ port 57500
+!
+telemetry model-driven
+ destination-group DGroup1
+  address-family ipv4 172.30.8.4 port 5432
+   encoding self-describing-gpb
+   protocol tcp
+  !
+ !
+ destination-group DGroup2
+  address-family ipv4 172.30.8.4 port 57500
+   encoding self-describing-gpb
+   protocol grpc
+  !
+ !
+ sensor-group SGroup1
+  sensor-path XR-infra-statsd-oper:infra-statistics/interfaces/interface/latest/generic-counters
+ !
+ sensor-group SGroup2
+  sensor-path XR-nto-misc-oper:memory-summary/nodes/node/summary
+ !
+ subscription Sub1
+  sensor-group-id SGroup1 sample-interval 30000
+  destination-id DGroup1
+ !
+ subscription Sub2
+  sensor-group-id SGroup2 sample-interval 30000
+  destination-id DGroup2
+ !
+ptp
+ clock
+  domain 24
+  profile g.8275.1 clock-type T-BC
+  priority2 64
+ !
+ profile G.8275.1
+  multicast
+  transport ethernet
+  sync frequency 16
+  announce frequency 8
+  delay-request frequency 16
+ !
+ physical-layer-frequency
+ log
+  servo events
+  best-master-clock changes
+ !
+!
+  !
+
+!
+tcp selective-ack
+tcp path-mtu-discovery
+tcp timestamp
+!
+line template VTY
+ transport input ssh
+!
+line default
+ exec-timeout 10 0
+ session-limit 10
+ session-timeout 100
+!
+vty-pool default 0 15 line-template VTY
+!
+install
+ repository local-repo
+  url file:///harddisk:/7.2.2
+!
+
+snmp-server ifmib ifalias long
+snmp-server ifindex persist
+snmp-server ifmib stats cache
+snmp-server trap link ietf
+snmp-server engineID local 49:09:01:00:01:17:20:22:12:80:01:00
+snmp-server vrf mng-net
+ host 172.22.126.1 traps version 2c SNMP-SERVSR
+ host 172.22.126.17 traps version 2c SNMP-SERVSR
+ host 172.27.2.21 traps version 2c SNMP-SERVSR
+ host 172.27.2.22 traps version 2c SNMP-SERVSR
+ host 172.27.2.25 traps version 2c SNMP-SERVSR
+ host 172.27.2.63 traps version 2c SNMP-SERVSR
+ host 172.27.2.168 traps version 2c SNMP-SERVSR
+ host 172.27.2.244 traps version 2c SNMP-SERVSR
+ host 172.27.10.73 traps version 2c SNMP-SERVSR 
+ host 172.27.10.74 traps version 2c SNMP-SERVSR
+!
+snmp-server ipv4 dscp cs6
+snmp-server community SNMP-SERVSR RW SystemOwner IPv4 SNMP-ACL
+snmp-server queue-length 4000
+snmp-server traps rf
+snmp-server traps bfd
+snmp-server traps ethernet cfm
+snmp-server traps ntp
+snmp-server traps ethernet oam events
+snmp-server traps copy-complete
+snmp-server traps snmp linkup
+snmp-server traps snmp linkdown
+snmp-server traps snmp coldstart
+snmp-server traps snmp warmstart
+snmp-server traps snmp authentication
+snmp-server traps flash removal
+snmp-server traps flash insertion
+snmp-server traps power
+snmp-server traps config
+snmp-server traps entity
+snmp-server traps selective-vrf-download role-change
+snmp-server traps syslog
+snmp-server traps system
+snmp-server traps frequency synchronization
+snmp-server traps bridgemib
+snmp-server traps addrpool low
+snmp-server traps addrpool high
+snmp-server traps cisco-entity-ext
+snmp-server traps entity-state operstatus
+snmp-server traps entity-state switchover
+snmp-server traps entity-redundancy all
+snmp-server traps entity-redundancy status
+snmp-server traps entity-redundancy switchover
+snmp-server contact "Operation Data Team"
+snmp-server location {{ item['hostname'] }}
+snmp-server trap-source Loopback100
+!
+
+ntp
+ ipv4 dscp cs6
+ server vrf mng-net 10.1.3.7 prefer
+ server vrf mng-net 192.168.150.3
+ access-group vrf mng-net ipv4 peer NTP-ACL
+ update-calendar
+!
+frequency synchronization
+ quality itu-t option 1
+ clock-interface timing-mode system
+ log selection changes
+!
+key chain ISIS
+ key 1
+  accept-lifetime 00:00:00 march 10 2015 infinite
+  key-string password 11041B0D
+  send-lifetime 00:00:00 march 10 2015 infinite
+  cryptographic-algorithm HMAC-MD5
+ !
+!
+key chain BGP-RR
+ key 1
+  accept-lifetime 00:00:00 march 10 2015 infinite
+  key-string password 11041B0D
+  send-lifetime 00:00:00 march 10 2015 infinite
+  cryptographic-algorithm HMAC-MD5
+ !
+
+call-home
+ vrf mng-net
+ service active
+ contact smart-licensing
+ source-interface Loopback100
+ profile CiscoTAC-1
+  active
+  destination address http http://10.4.2.28:80/Transportgateway/services/DeviceRequestHandler
+  destination transport-method http
+  !
+  !
+control-plane
+ management-plane
+  inband
+   interface all
+    allow SSH peer
+     address ipv4 10.63.109.135
+     address ipv4 172.27.2.35
+     address ipv4 172.27.2.61
+     address ipv4 172.27.2.113
+     address ipv4 172.27.2.124
+     address ipv4 172.27.2.150
+     address ipv4 172.27.2.163
+     address ipv4 172.27.26.1
+     address ipv4 172.30.48.84
+     address ipv4 172.22.126.0/28
+     address ipv4 172.22.126.16/28
+     address ipv4 172.22.128.0/24
+     address ipv4 172.22.133.0/24
+     address ipv4 172.27.10.73
+     address ipv4 172.27.10.74
+     address ipv4 172.27.13.128/25
+     address ipv4 172.27.16.0/25
+     address ipv4 172.27.17.0/26
+    !
+    allow SNMP peer
+     address ipv4 172.22.126.1
+     address ipv4 172.22.126.17
+     address ipv4 172.27.2.21
+     address ipv4 172.27.2.22
+     address ipv4 172.27.2.25
+     address ipv4 172.27.2.63
+     address ipv4 172.27.2.168
+     address ipv4 172.27.10.73
+     address ipv4 172.27.10.74
+     address ipv4 172.27.2.244
+    !
+    allow NETCONF peer
+     address ipv4 10.63.109.135
+     address ipv4 172.27.2.35
+     address ipv4 172.27.2.61
+     address ipv4 172.27.2.113
+     address ipv4 172.27.2.124
+     address ipv4 172.27.2.150
+     address ipv4 172.27.2.163
+     address ipv4 172.27.26.1
+     address ipv4 172.30.48.84
+     address ipv4 172.27.13.128/25
+     address ipv4 172.27.16.0/25
+     address ipv4 172.27.17.0/26
+    !
+   !
+  !
+ !
+!
+netconf-yang agent
+ ssh
+!
+ipv4 access-list NTP-ACL
+ 10 permit ipv4 host 10.1.3.7 any
+ 20 permit ipv4 host 192.168.150.3 any
+!
+ipv4 access-list SNMP-ACL
+ 10 permit ipv4 172.27.10.72 0.0.0.7 any
+ 20 permit ipv4 172.22.126.0 0.0.0.15 any
+ 30 permit ipv4 172.22.126.16 0.0.0.15 any
+ 40 permit ipv4 host 172.27.2.21 any
+ 50 permit ipv4 host 172.27.2.22 any
+ 60 permit ipv4 host 172.27.2.25 any
+ 70 permit ipv4 host 172.27.2.244 any
+ 80 permit ipv4 host 172.27.2.63 any
+ 90 permit ipv4 host 172.22.126.1 any
+ 100 permit ipv4 host 172.22.126.17 any
+ 110 permit ipv4 host 172.27.2.168 any
+ 120 deny ipv4 any any
+!
+
+class-map match-any best-effort-in
+match mpls experimental topmost 1
+match dscp af11 af12 af13 cs1
+match precedence 1
+end-class-map
+!
+!
+class-map match-any silver-in
+match mpls experimental topmost 2
+match dscp af21 af22 af23 cs2
+match precedence 2
+end-class-map
+!
+class-map match-any gold-in
+match mpls experimental topmost 3
+match dscp af31 af32 af33 cs3
+match precedence 3
+end-class-map
+!
+class-map match-any video-in
+match mpls experimental topmost 4
+match dscp af41 af42 af43 cs4
+match precedence 4
+end-class-map
+ 
+!
+class-map match-any voice-ces-sig-in
+match mpls experimental topmost 5
+match dscp ef cs5
+match precedence 5
+end-class-map
+!
+class-map match-any mpls-nc-in
+match mpls experimental topmost 6
+match dscp cs6
+match precedence 6
+end-class-map
+! 
+class-map match-any gold-out-marking
+ match qos-group 3 
+ end-class-map
+! 
+class-map match-any gold-out-queueing
+ match traffic-class 3 
+ end-class-map
+! 
+class-map match-any video-out-marking
+ match qos-group 4 
+ end-class-map
+! 
+class-map match-any silver-out-marking
+ match qos-group 2 
+ end-class-map
+! 
+class-map match-any video-out-queueing
+ match traffic-class 4 
+ end-class-map
+! 
+class-map match-any mpls-nc-out-marking
+ match qos-group 6 
+ end-class-map
+! 
+class-map match-any silver-out-queueing
+ match traffic-class 2 
+ end-class-map
+! 
+class-map match-any mpls-nc-out-queueing
+ match traffic-class 6 
+ end-class-map
+! 
+class-map match-any best-effort-out-marking
+ match qos-group 1 
+ end-class-map
+! 
+class-map match-any best-effort-out-queueing
+ match traffic-class 1 
+ end-class-map
+! 
+class-map match-any voice-ces-sig-out-marking
+ match qos-group 5 
+ end-class-map
+! 
+class-map match-any voice-ces-sig-out-queueing
+ match traffic-class 5 
+ end-class-map
+! 
+policy-map qos-in-uni
+class mpls-nc-in
+  set traffic-class 6
+  set qos-group 6
+!
+class voice-ces-sig-in
+  set traffic-class 5
+  set qos-group 5
+!
+class video-in
+  set traffic-class 4
+  set qos-group 4
+!
+class gold-in
+  set traffic-class 3
+  set qos-group 3
+!
+class silver-in
+  set traffic-class 2
+  set qos-group 2
+!
+class best-effort-in
+  set traffic-class 1
+  set qos-group 1
+!
+class class-default
+  set traffic-class 0
+  set qos-group 0
+!
+policy-map qos-out-uni
+ class voice-ces-sig-out-queueing
+  priority level 1 
+  shape average percent 40 
+ ! 
+ class video-out-queueing
+  priority level 2 
+  shape average percent 15 
+ ! 
+ class gold-out-queueing
+  bandwidth percent 15 
+ ! 
+ class silver-out-queueing
+  bandwidth percent 20 
+ ! 
+ class best-effort-out-queueing
+  bandwidth percent 5 
+ ! 
+ class class-default
+  bandwidth percent 5 
+ ! 
+!
+end-policy-map
+!
+policy-map qos-in-nni
+ class mpls-nc-in
+  set traffic-class 6
+  set qos-group 6
+ ! 
+ class voice-ces-sig-in
+  set traffic-class 5
+  set qos-group 5
+ ! 
+ class video-in
+  set traffic-class 4
+  set qos-group 4
+ ! 
+ class gold-in
+  set traffic-class 3
+  set qos-group 3
+ ! 
+ class silver-in
+  set traffic-class 2
+  set qos-group 2
+ ! 
+ class best-effort-in
+  set traffic-class 1
+  set qos-group 1
+ ! 
+ class class-default
+  set traffic-class 0
+  set qos-group 0
+ ! 
+ end-policy-map
+! 
+policy-map qos-out-nni-marking
+ class mpls-nc-out-marking
+  set mpls experimental imposition 6
+ ! 
+ class voice-ces-sig-out-marking
+  set mpls experimental imposition 5
+ ! 
+ class video-out-marking
+  set mpls experimental imposition 4
+ ! 
+ class gold-out-marking
+  set mpls experimental imposition 3
+ ! 
+ class silver-out-marking
+  set mpls experimental imposition 2
+ ! 
+ class best-effort-out-marking
+  set mpls experimental imposition 1
+ ! 
+ class class-default
+  set mpls experimental imposition 0
+ ! 
+ end-policy-map
+! 
+policy-map qos-out-nni-queueing
+ class mpls-nc-out-queueing
+  bandwidth percent 1 
+ ! 
+ class voice-ces-sig-out-queueing
+  priority level 1 
+  shape average percent 5 
+ ! 
+ class video-out-queueing
+  priority level 2 
+  shape average percent 30 
+ ! 
+ class gold-out-queueing
+  bandwidth percent 30 
+ ! 
+ class silver-out-queueing
+  bandwidth percent 30 
+ ! 
+ class best-effort-out-queueing
+  bandwidth percent 4 
+ ! 
+ class class-default
+ ! 
+ end-policy-map
+! 
+interface Loopback0
+ description Loopback0
+ ipv4 address {{ item['ip_loopback0'] }} 255.255.255.255
+!
+interface Loopback100
+ description Loopback100
+ vrf mng-net
+ ipv4 address {{ item['ip_loopback100'] }} 255.255.255.255
+!
+interface HundredGigE0/0/0/29
+ description {{ item['description_to_port_29'] }}
+ cdp
+ mtu 9216
+ ptp
+  profile G.8275.1
+  port state any
+  local-priority {{ priority_port_29 }}
+ !
+ service-policy input qos-in-nni
+ service-policy output qos-out-nni-marking
+ service-policy output qos-out-nni-queueing
+ ipv4 point-to-point
+ ipv4 address {{ item['ip_port_29'] }} 255.255.255.252
+ carrier-delay up 2000 down 0
+ load-interval 30
+ dampening
+ frequency synchronization
+  selection input
+  priority {{ priority_port_29 }}
+ !
+interface HundredGigE0/0/0/28
+ description {{ item['description_to_port_28'] }}
+ cdp
+ mtu 9216
+ ptp
+  profile G.8275.1
+  port state any
+  local-priority {{ priority_port_28 }}
+ !
+ service-policy input qos-in-nni
+ service-policy output qos-out-nni-marking
+ service-policy output qos-out-nni-queueing
+ ipv4 point-to-point
+ ipv4 address {{ item['ip_port_28'] }} 255.255.255.252
+ carrier-delay up 2000 down 0
+ load-interval 30
+ dampening
+ frequency synchronization
+  selection input
+  priority {{ priority_port_28 }}
+ !
+ !
+
+!
+extcommunity-set opaque C100
+  100
+end-set
+!
+route-policy RP_BGP_PIC_EDGE
+  set path-selection backup 1 install
+end-policy
+!
+route-policy VRF_MNG-NET_C100
+  set extcommunity color C100
+  pass
+end-policy
+!
+route-policy sr-p2mp-core-tree
+  set core-tree sr-p2mp
+end-policy
+!
+
+
+!
+vrf mng-net
+ description mng-net
+ address-family ipv4 unicast
+  import route-target
+   65503:1
+  !
+  export route-policy VRF_MNG-NET_C100
+  export route-target
+   65503:100
+  !
+
+router isis ACCESS
+ set-overload-bit on-startup 360
+ is-type level-2-only
+ net {{ isis_nsap_id }}
+ instance-id {{ domain_id }}
+ nsf cisco
+ log adjacency changes
+ lsp-gen-interval maximum-wait 5000 initial-wait 50 secondary-wait 200
+ lsp-refresh-interval 64000
+ max-lsp-lifetime 65535
+ lsp-password keychain ISIS
+ address-family ipv4 unicast
+  metric-style wide level 2
+  microloop avoidance segment-routing
+  advertise passive-only
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  spf-interval maximum-wait 5000 initial-wait 50 secondary-wait 100
+  segment-routing mpls sr-prefer
+  spf prefix-priority critical tag 100
+ !
+ interface Loopback0
+  passive
+  circuit-type level-2-only
+  address-family ipv4 unicast
+   tag 100
+   prefix-sid absolute {{ item['prefix_sid'] }}
+  !
+ !
+ interface HundredGigE0/0/0/28
+  circuit-type level-2-only
+  bfd minimum-interval 15
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-password keychain ISIS
+  address-family ipv4 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+   metric {{ metric_port_28 }}
+  !
+ !
+ interface HundredGigE0/0/0/29
+  circuit-type level-2-only
+  bfd minimum-interval 15
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-password keychain ISIS
+  address-family ipv4 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+   metric {{ metric_port_29 }}
+  !
+ !
+!
+snmp-server traps isis all
+snmp-server traps ospfv3 errors bad-packet
+snmp-server traps ospfv3 errors config-error
+snmp-server traps ospfv3 errors virt-bad-packet
+snmp-server traps ospfv3 state-change if-state-change
+snmp-server traps ospfv3 state-change neighbor-state-change
+snmp-server traps ospfv3 state-change virtif-state-change
+snmp-server traps ospfv3 state-change virtneighbor-state-change
+snmp-server traps ospfv3 state-change restart-status-change
+snmp-server traps ospfv3 state-change restart-virtual-helper-status-change
+snmp-server traps bgp cbgp2
+snmp-server traps bgp updown
+!
+
+router bgp 65503
+nsr
+ timers bgp 30 90
+ bgp router-id {{ item['ip_loopback0'] }}
+ bgp graceful-restart restart-time 120
+ bgp graceful-restart graceful-reset
+ bgp graceful-restart stalepath-time 360
+ bgp graceful-restart
+ bgp log neighbor changes detail
+ address-family vpnv4 unicast
+  additional-paths receive
+  additional-paths send
+  additional-paths selection route-policy RP_BGP_PIC_EDGE
+ !
+ address-family l2vpn evpn
+  additional-paths receive
+  additional-paths send
+  additional-paths selection route-policy RP_BGP_PIC_EDGE
+ !
+ neighbor-group BGP-RR
+  remote-as 65503
+  keychain BGP-RR
+  update-source Loopback0
+  address-family vpnv4 unicast
+  !
+  address-family l2vpn evpn
+  !
+ !
+ neighbor 172.22.68.17
+  use neighbor-group BGP-RR
+ !
+ neighbor 172.22.68.18
+  use neighbor-group BGP-RR
+ !
+
+ 
+  !
+ vrf mng-net
+  rd {{ item['ip_loopback0'] }}:100
+  address-family ipv4 unicast
+   redistribute connected
+   redistribute static
+  !
+ !
+!
+snmp-server traps hsrp
+snmp-server traps vrrp events
+snmp-server traps vpls all
+snmp-server traps vpls status
+snmp-server traps vpls full-clear
+snmp-server traps vpls full-raise
+snmp-server traps l2vpn all
+snmp-server traps l2vpn vc-up
+snmp-server traps l2vpn vc-down
+!
+mpls oam
+ dpm
+  pps 10
+  interval 60
+ !
+!
+snmp-server traps mpls traffic-eng up
+snmp-server traps mpls traffic-eng down
+snmp-server traps mpls traffic-eng reroute
+snmp-server traps mpls traffic-eng reoptimize
+snmp-server traps mpls frr all
+snmp-server traps mpls frr protected
+snmp-server traps mpls frr unprotected
+snmp-server traps mpls ldp up
+snmp-server traps mpls ldp down
+snmp-server traps mpls ldp threshold
+snmp-server traps mpls traffic-eng p2mp up
+snmp-server traps mpls traffic-eng p2mp down
+snmp-server traps rsvp all
+snmp-server traps rsvp new-flow
+snmp-server traps rsvp lost-flow
+snmp-server traps mpls l3vpn all
+snmp-server traps mpls l3vpn vrf-up
+snmp-server traps mpls l3vpn vrf-down
+snmp-server traps mpls l3vpn max-threshold-cleared
+snmp-server traps mpls l3vpn max-threshold-exceeded
+snmp-server traps mpls l3vpn mid-threshold-exceeded
+snmp-server traps mpls l3vpn max-threshold-reissue-notif-time 1
+snmp-server traps pim neighbor-change
+snmp-server traps pim invalid-message-received
+snmp-server traps pim rp-mapping-change
+snmp-server traps pim interface-state-change
+snmp-server traps msdp peer-state-change
+!
+!
+
+segment-routing
+ global-block 16000 23999
+ local-block 15000 15999
+ traffic-eng
+  interface HundredGigE0/0/0/28
+  !
+  interface HundredGigE0/0/0/29
+  !
+  candidate-paths
+   all
+    source-address ipv4 {{ item['ip_loopback0'] }}
+   !
+  !
+  logging
+   policy status
+  !
+  on-demand color 100
+   dynamic
+    pcep
+    !
+    metric
+     type igp
+    !
+   !
+  !
+  pcc
+   source-address ipv4 {{ item['ip_loopback0'] }}
+   pce address ipv4 172.22.68.17
+   !
+   pce address ipv4 172.22.68.18
+   !
+   timers initiated state 0
+   timers initiated orphan 0
+  !
+ !
+!
+xml agent tty
+!
+snmp-server traps sensor
+snmp-server traps fru-ctrl
+!
+netconf agent tty
+!
+snmp-server traps ospf lsa lsa-maxage
+snmp-server traps ospf lsa lsa-originate
+snmp-server traps ospf errors bad-packet
+snmp-server traps ospf errors authentication-failure
+snmp-server traps ospf errors config-error
+snmp-server traps ospf errors virt-bad-packet
+snmp-server traps ospf errors virt-authentication-failure
+snmp-server traps ospf errors virt-config-error
+snmp-server traps ospf retransmit packets
+snmp-server traps ospf retransmit virt-packets
+snmp-server traps ospf state-change if-state-change
+snmp-server traps ospf state-change neighbor-state-change
+snmp-server traps ospf state-change virtif-state-change
+snmp-server traps ospf state-change virtneighbor-state-change
+!
+lldp
+!
+performance-measurement
+ interface HundredGigE0/0/0/28
+  delay-measurement
+  !
+ !
+ interface HundredGigE0/0/0/29
+  delay-measurement
+  !
+ !
+ delay-profile interfaces default
+  probe
+   measurement-mode two-way
+   protocol twamp-light
+  !
+  exit
+  exit
+ !
+ protocol twamp-light
+  measurement delay
+   unauthenticated
+    querier-dst-port 862
+   !
+  !
+ !
+!
+snmp-server traps ipsla
+snmp-server traps pki
+snmp-server traps ipsec tunnel stop
+snmp-server traps ipsec tunnel start
+snmp-server traps isakmp tunnel stop
+snmp-server traps isakmp tunnel start
+
+!
+ssh server dscp 48
+ssh server logging
+ssh timeout 60
+ssh server rate-limit 600
+ssh server algorithms cipher 3des-cbc aes128-ctr aes192-ctr aes256-ctr aes128-gcm@openssh.com aes256-gcm@openssh.com aes256-cbc aes192-cbc aes128-cbc
+ssh server algorithms key-exchange diffie-hellman-group1-sha1 diffie-hellman-group14-sha1
+ssh server session-limit 64
+ssh server v2
+ssh server vrf mng-net
+ssh server netconf vrf mng-net
+!
+
+vrf ftth-mc
+ address-family ipv4 unicast
+  import route-target
+   65503:111
+  !
+  export route-target
+   65503:111000
+
+ipv4 access-list ssm
+ 10 permit ipv4 232.0.0.0/8 any
+ 20 permit ipv4 231.0.0.0/24 any
+ 30 permit ipv4 231.1.1.0/24 any
+
+ipv4 access-list mcast_rate
+ 10 permit ipv4 host 82.166.179.1 232.0.0.0/8
+ 20 permit ipv4 host 82.166.179.1 231.0.0.0/24
+ 30 permit ipv4 host 82.166.179.1 231.1.1.0/24
+
+
+route-policy sr-p2mp-core-tree
+  set core-tree sr-p2mp
+end-policy
+
+router bgp 65503
+ 
+ vrf ftth-mc
+  rd {{ item['ip_loopback0'] }}:111
+  address-family ipv4 unicast
+   redis conn
+
+multicast-routing
+address-family ipv4
+  interface Loopback0
+   enable
+         
+ vrf ftth-mc
+  address-family ipv4
+   mdt source Loopback0
+   log-traps
+   rate-per-route
+   interface all enable
+   static sr-policy TREE_SID_PE1
+   static sr-policy TREE_SID_PE2
+   accounting per-prefix
+   mdt static segment-routing
+  !       
+ !        
+!         
+
+
+router pim
+address-family ipv4
+  interface Loopback0
+   enable
+        
+ vrf ftth-mc
+  address-family ipv4
+   rpf topology route-policy sr-p2mp-core-tree
+   ssm range ssm
+   
+ !
+   hw-module profile qos hqos-enable
+   hw-module route-stats l3mcast ipv4 ingress mcast_rate
+   hw-module route-stats l3mcast ipv4 egress mcast_rate

@@ -1,0 +1,49 @@
+{{ item['west_agg_hostname'] }}
+
+ter mon
+
+conf t
+
+interface {{ item['west_agg_port_to_acc'] }}
+description description {{ item['west_agg_description_to_acc'] }}
+no shut
+ cdp
+ mtu 9216
+ ptp
+  profile G.8275.1
+  port state master-only
+ !
+ service-policy input qos-in-nni
+ service-policy output qos-out-nni-queueing
+ ipv4 point-to-point
+ ipv4 address {{ item['west_agg_ip_to_acc'] }} 255.255.255.252
+ carrier-delay up 2000 down 0
+ load-interval 30
+ dampening
+ frequency synchroniza
+
+
+router isis {{ isis_west_east_domain }}
+
+interface {{ item['west_agg_port_to_acc'] }}
+  circuit-type level-2-only
+  bfd minimum-interval 15
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-password keychain ISIS
+  address-family ipv4 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+   metric 1000
+
+segment-routing
+
+ traffic-eng
+      
+  interface {{ item['west_agg_port_to_acc'] }}
+
+
+performance-measurement
+ interface {{ item['west_agg_port_to_acc'] }}
+  delay-measurement

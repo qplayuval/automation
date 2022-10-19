@@ -1,0 +1,52 @@
+---
+
+- name: install packages...
+  cisco.iosxr.iosxr_command:
+    commands: show install request 
+    interval: 5
+    retries: 300
+    match: "all"
+    wait_for: result[0] contains "Success since"
+
+- name: install packages and reboot...
+  cisco.iosxr.iosxr_command:
+    commands:
+    - { command: install apply reload, prompt: "[yes]", answer: y}
+
+- name: reloading the router...
+  ansible.builtin.pause:
+    minutes: 1
+
+- name: Waits for connection to come back - IP {{ inventory_hostname }} 
+  ansible.builtin.wait_for_connection:
+    timeout: "{{ software_upgrade['timeout'] }}"
+
+- name: block of tasks that check the status of the installation
+  block:
+    - name: check installation status success
+      cisco.iosxr.iosxr_command:
+        commands: show install request 
+        match: "all"
+        wait_for: result[0] contains "Success since"
+
+    - name: check software version
+      cisco.iosxr.iosxr_command:
+        commands: show version
+      register: result
+
+    - name: validate software version
+      ansible.builtin.fail:
+        msg: software version not succeded ! --> "{{ result['stdout'] }}"
+      when: "version_pattern not in result|lower"
+
+- name: invoke commit installation
+  cisco.iosxr.iosxr_command:
+    commands: install commit
+
+- name: commiting installation...
+  cisco.iosxr.iosxr_command:
+    commands: show install request 
+    interval: 5
+    retries: 300
+    match: "all"
+    wait_for: result[0] contains "Success since"

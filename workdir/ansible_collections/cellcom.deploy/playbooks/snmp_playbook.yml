@@ -1,0 +1,24 @@
+---
+
+- hosts: lab_net
+  gather_facts: yes
+  ignore_unreachable: yes
+  ignore_errors: yes
+  debugger: on_failed
+
+  vars_prompt:
+
+    - name: ansible_user
+      prompt: Whats is your username ?
+      private: no
+
+    - name: ansible_ssh_pass
+      prompt: Enter password
+      private: yes
+
+
+  tasks:
+
+    - name: import set_snmp role
+      import_role:
+        name: cellcom.deploy.set_snmp

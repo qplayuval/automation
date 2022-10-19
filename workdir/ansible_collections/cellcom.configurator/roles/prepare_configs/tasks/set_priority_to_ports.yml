@@ -1,0 +1,24 @@
+---
+
+- name: set priority ptp to ports 28 (540 or 57b1 connections)
+  set_fact:
+    priority_port_28: 10
+    priority_port_29: 20
+  when: (("'540' in item['description_to_port_28']|lower") and ("'540' in item['description_to_port_29']|lower")) or
+        (("'57b1' in item['description_to_port_28']|lower") and ("'57b1' in item['description_to_port_29']|lower"))
+
+- name: set priority ptp to ports 28(to 540) and 29(to 57b1)
+  set_fact:
+    priority_port_28: 20
+    priority_port_29: 10
+  when:
+    - "'540' in item['description_to_port_28']|lower"
+    - "'57b1' in item['description_to_port_29']|lower"
+
+- name: set priority ptp to ports 28(to 57b1) and 29(to 540)
+  set_fact:
+    priority_port_28: 10
+    priority_port_29: 20
+  when:
+    - "'57b1' in item['description_to_port_28']|lower"
+    - "'540' in item['description_to_port_29']|lower"

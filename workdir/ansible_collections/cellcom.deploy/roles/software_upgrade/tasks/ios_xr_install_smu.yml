@@ -1,0 +1,77 @@
+---
+
+- name: block of tasks to discover .tar path
+  block:
+    - name: get .tar path for the image
+      cisco.iosxr.iosxr_command:
+        commands: bash -c  find /var/xr/disk1/{{ software_upgrade['version'] }} -type f -name *.tar
+      register: result
+    
+    - name: set .tar path
+      set_fact:
+        tar_file_path: "{{ result['stdout'][-1] }}"
+
+- name: extract tar SMU file
+  block:
+    - name: extract tar SMU file ...
+      cisco.iosxr.iosxr_command:
+        commands: run cd /var/xr/disk1/{{ software_upgrade['version'] }}/; tar -xvf {{ tar_file_path }}; [ $\? -eq 0 ] && echo success || echo failed
+      register: result
+
+    - name: check extract process
+      ansible.builtin.fail:
+        msg: something going wrong with the {{ tar_file_path }}
+      when: result is not search("success")
+
+- name: create back-end local repo
+  cisco.iosxr.iosxr_command:
+    commands: run cd /var/xr/disk1/{{ software_upgrade['version'] }}/; createrepo_c files
+    match: "all"
+    wait_for: result[0] contains "Pool finished"
+
+- name: process of creating local repo...
+  ansible.builtin.pause:
+    seconds: 10
+
+- name: block of tasks that create and check local repo
+  block:
+    - name: create local repo from cisco device
+      cisco.iosxr.iosxr_config:
+        lines: install repository local-repo url file:///harddisk:/{{ software_upgrade['version'] }}/files
+
+    - name: output relevant local repo contents
+      cisco.iosxr.iosxr_command:
+        commands: show install available | utility egrep {{ software_upgrade['version'] }}
+      register: result
+
+    - name: check local repo output
+      ansible.builtin.fail:
+        msg: something not working when creating local repo...
+      when: result.stdout | regex_search("![a-zA-Z0-9]+")
+
+- name: SMU packages to install
+  cisco.iosxr.iosxr_command:
+    commands: install package add {{ packages_to_install }}
+
+- name: import auto install packages
+  import_tasks: ios_xr_install_packages.yml
+
+- name: block of tasks that invoke and check cfs
+  block:
+    - name: invoke check of the Configuration File System
+      cisco.iosxr.iosxr_command:
+        commands: cfs check
+      register: result
+
+    - name: check cfs output
+      ansible.builtin.fail:
+        msg: something going wrong with the cfs {{ result['stdout'] }}..
+      when: (result.stdout | regex_findall('OK') | length) != 3
+
+- name: SMU upgraded successfully 
+  ansible.builtin.debug:
+    msg: SMU upgraded successfully 
+
+- name: SMU upgraded successfully 
+  ansible.builtin.debug:
+    msg: =====================================================================================
