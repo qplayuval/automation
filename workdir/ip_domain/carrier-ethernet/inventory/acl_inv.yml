@@ -9,5 +9,5 @@ acl_net:
   vars:
     ansible_network_os: "cisco.iosxr.iosxr"
     ansible_connection: "ansible.netcommon.network_cli"
-    ansible_user: "cellcom"
-    ansible_password: "cellcom"
+    #ansible_user: ""
+    #ansible_password: ""
