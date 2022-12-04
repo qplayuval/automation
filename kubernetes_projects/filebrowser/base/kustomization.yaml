@@ -3,11 +3,8 @@ kind: Kustomization
 
 metadata:
   name: kustomize-filebrowser
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: HookFailed
 
-namespace: filebrowser-1
+namespace: filebrowser
 
 resources:
 - namespace.yaml
