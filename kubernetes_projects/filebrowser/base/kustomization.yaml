@@ -9,6 +9,6 @@ namespace: filebrowser
 resources:
 - namespace.yaml
 - deployment.yaml
-#- persistentvolumeclaim.yaml  
-#- persistentvolume.yaml
-#- service.yaml
+- persistentvolumeclaim.yaml  
+- persistentvolume.yaml
+- service.yaml
