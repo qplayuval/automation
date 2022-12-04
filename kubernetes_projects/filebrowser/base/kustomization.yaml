@@ -3,6 +3,9 @@ kind: Kustomization
 
 metadata:
   name: kustomize-filebrowser
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
 
 namespace: filebrowser
 
