@@ -6,7 +6,7 @@ metadata:
 
 namespace: filebrowser
 commonLabels:
-  app: foo
+  app: fooo
 
 resources:
 - namespace.yaml
