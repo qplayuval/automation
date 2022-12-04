@@ -5,6 +5,8 @@ metadata:
   name: kustomize-filebrowser
 
 namespace: filebrowser
+commonLabels:
+  app: foo
 
 resources:
 - namespace.yaml
